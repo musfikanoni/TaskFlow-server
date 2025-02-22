@@ -32,21 +32,58 @@ async function run() {
     // Send a ping to confirm a successful connection
 
     const userCollection = client.db('TaskFlowDB').collection('users');
+    const taskCollection = client.db('TaskFlowDB').collection('task');
 
-
+    // user Post API 
     app.post('/users', async(req, res) => {
-        const newUser = req.body;
-        console.log('creating new user', newUser);
+        const user = req.body;
+        console.log('creating new user', user);
+
+        const query = {email: user.email}
+        const existingUser = await userCollection.findOne(query);
+        if(existingUser){
+            return res.send({message: 'user already exists', insertedId: null})
+        }
+        const userToBeAdded = {
+            ...user,
+            createdAt: new Date(),
+          };
     
-        const result = await userCollection.insertOne(newUser)
+        const result = await userCollection.insertOne(userToBeAdded)
         res.send(result);
       });
 
+      app.post('/task', async(req, res) => {
+        const taskData = req.body;
+        const result = await taskCollection.insertOne(taskData);
+        res.send(result);
+      })
 
 
+      // Task post API 
 
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+      app.get('/task', async(req, res) => {
+        const email = req.query.email;
+      
+        let query = {};
+        if (email) {
+          query = { email: email };
+        }
+
+        try {
+          const result = await taskCollection.find(query).toArray();
+          res.send(result);
+        } catch (error) {
+          res.status(500).send({ message: 'Error fetching Task List' });
+        }
+
+
+      })
+
+      
+
+    // await client.db("admin").command({ ping: 1 });
+    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
