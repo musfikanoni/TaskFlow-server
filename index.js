@@ -87,6 +87,25 @@ async function run() {
       res.send(result);
     })
 
+    //update API
+    
+    app.put('/task/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)};
+      const options = {upsert: true};
+      const updateTask = req.body;
+      const task = {
+        $set: {
+          title: updateTask.title,
+          description: updateTask.description,
+          category: updateTask.category,
+        }
+      }
+      
+      const result = await taskCollection.updateOne(filter, task, options);
+      res.send(result);
+    })
+
       
 
     // await client.db("admin").command({ ping: 1 });
